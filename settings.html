@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iSkedMathay - Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="theme.js" defer></script>
+  <style>
+    :root {
+      --main-bg: #f7f3ef;
+      --sidebar-bg: #f2e9df;
+      --text-color: #000;
+      --accent1: #ff5f6d;
+      --accent2: #d82cff;
+      --card-bg: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: var(--main-bg);
+      color: var(--text-color);
+      display: flex;
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 100px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+
+    .sidebar img {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: #fff;
+      padding: 5px;
+      margin-bottom: 25px;
+    }
+
+    .sidebar a {
+      color: var(--accent2);
+      text-decoration: none;
+      font-weight: 600;
+      margin: 18px 0;
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      transform: scale(1.1);
+      color: var(--accent1);
+      text-shadow: 0 0 8px var(--accent1), 0 0 15px var(--accent2);
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      margin-left: 100px;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--accent1), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 15px;
+    }
+
+    .settings-card {
+      background-color: var(--card-bg);
+      border-radius: 15px;
+      padding: 30px;
+      width: 500px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin: 40px auto;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: var(--accent2);
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-family: "Poppins";
+      font-size: 15px;
+    }
+
+    .save-btn {
+      display: block;
+      background: linear-gradient(to right, var(--accent1), var(--accent2));
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 25px;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .save-btn:hover {
+      opacity: 0.9;
+      transform: scale(1.03);
+    }
+
+    .notif {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 10px;
+      background-color: var(--accent2);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.4s ease;
+      z-index: 9999;
+    }
+
+    .notif.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ✅ Responsive for mobile, but keeps same design */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .main {
+        padding: 20px;
+        margin: 0;
+      }
+
+      .settings-card {
+        width: 100%;
+        max-width: 90%;
+        margin: 20px auto;
+      }
+
+      .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    background: var(--sidebar-bg);
+    padding: 0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  }
+
+      .sidebar img {
+        display: none;
+      }
+
+      .sidebar a {
+        font-size: 12px;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <img src="67eb2372-bf44-433b-bd1e-320f92ae8387.jpg" alt="Logo" />
+    <a href="index.html"><i class="fas fa-home"></i><br>Home</a>
+    <a href="calendar.html"><i class="fas fa-calendar-alt"></i><br>Calendar</a>
+    <a href="settings.html"><i class="fas fa-cog"></i><br>Settings</a>
+  </div>
+
+  <div class="main">
+    <div class="logo">iSkedMathay</div>
+    <div class="settings-card">
+      <h2>User Settings</h2>
+
+      <label for="name">Display Name</label>
+      <input type="text" id="name" placeholder="Enter your display name">
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" disabled>
+
+      <label for="themeSelect">Theme Color</label>
+      <select id="themeSelect">
+        <option value="default">Default (Pink–Purple)</option>
+        <option value="light">Light Cream</option>
+        <option value="dark">Dark Mode</option>
+        <option value="blue">Calm Blue</option>
+        <option value="green">Soft Mint</option>
+        <option value="purple">Lavender</option>
+        <option value="brown">Coffee Beige</option>
+        <option value="peach">Peach Blossom</option>
+      </select>
+
+      <button class="save-btn" id="saveBtn">Save Changes</button>
+    </div>
+  </div>
+
+  <div id="notif" class="notif">Saved successfully!</div>
+
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, updateProfile } 
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } 
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+import { applyTheme } from "./theme.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// elements
+const nameInput = document.getElementById("name");
+const emailInput = document.getElementById("email");
+const themeSelect = document.getElementById("themeSelect");
+const saveBtn = document.getElementById("saveBtn");
+const notif = document.getElementById("notif");
+
+let currentUser = null; // ✅ ITO LANG ANG DINAGDAG
+
+function showNotif(msg, ok = true) {
+  notif.textContent = msg;
+  notif.style.backgroundColor = ok ? "var(--accent2)" : "#ff5f6d";
+  notif.classList.add("show");
+  setTimeout(() => notif.classList.remove("show"), 2500);
+}
+
+// LOAD USER
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  currentUser = user; // ✅ IMPORTANT
+  emailInput.value = user.email || "";
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (snap.exists()) {
+    const data = snap.data();
+    nameInput.value = data.name || "";
+    if (data.theme) {
+      themeSelect.value = data.theme;
+      applyTheme(data.theme);
+    }
+  }
+});
+
+// ✅ SAVE BUTTON — NASA LABAS NA
+saveBtn.addEventListener("click", async () => {
+  if (!currentUser) return alert("Wait lang, loading pa user");
+
+
+
+  const newName = nameInput.value.trim();
+  const selectedTheme = themeSelect.value;
+
+  if (!newName) {
+    showNotif("Please enter a display name", false);
+    return;
+  }
+
+  try {
+    await setDoc(
+      doc(db, "users", currentUser.uid),
+      {
+        name: newName,
+        displayName: newName,
+        theme: selectedTheme,
+        email: currentUser.email
+      },
+      { merge: true }
+    );
+
+    // optional auth update
+    try {
+      await updateProfile(currentUser, { displayName: newName });
+    } catch {}
+
+    applyTheme(selectedTheme);
+    showNotif("Changes saved!");
+  } catch (e) {
+    console.error(e);
+    showNotif("Failed to save", false);
+  }
+});
+</script>
+
+</body>
+</html>

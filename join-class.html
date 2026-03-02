@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Class | iSkedMathay</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="theme.js" defer></script>
+<!-- SweetAlert2 CSS & JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --main-bg: #f7f3ef;
+      --sidebar-bg: #f2e9df;
+      --text-color: #000;
+      --accent1: #ff5f6d;
+      --accent2: #d82cff;
+      --card-bg: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: var(--main-bg);
+      color: var(--text-color);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 100px;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar img {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: #fff;
+      padding: 5px;
+      margin-bottom: 25px;
+    }
+
+    .sidebar a {
+      color: var(--accent2);
+      text-decoration: none;
+      font-weight: 600;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    .sidebar a:hover {
+      transform: scale(1.1);
+      text-shadow: 0 0 8px var(--accent1), 0 0 15px var(--accent2);
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    form {
+      background: var(--card-bg);
+      padding: 35px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      text-align: center;
+    }
+
+    h1 {
+      color: var(--accent2);
+      margin-bottom: 15px;
+    }
+
+    input {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color: var(--accent2);
+      outline: none;
+      box-shadow: 0 0 5px rgba(216,44,255,0.3);
+    }
+
+    button {
+      background: linear-gradient(to right, var(--accent1), var(--accent2));
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+    .swal2-popup {
+  backdrop-filter: blur(12px);
+}
+
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <img src="67eb2372-bf44-433b-bd1e-320f92ae8387.jpg" alt="Logo">
+    <a href="index.html"><i class="fas fa-home"></i><br>Home</a>
+    <a href="calendar.html"><i class="fas fa-calendar-alt"></i><br>Calendar</a>
+    <a href="settings.html"><i class="fas fa-cog"></i><br>Settings</a>
+  </div>
+
+  <div class="main">
+    <form id="joinForm">
+      <h1>Join a Class</h1>
+      <input type="text" id="classCodeInput" placeholder="Enter class code" required>
+      <button type="submit">Join Class</button>
+    </form>
+  </div>
+
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const joinForm = document.getElementById("joinForm");
+    const classCodeInput = document.getElementById("classCodeInput");
+
+    // Check login
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        alert("Please log in first.");
+        window.location.href = "login.html";
+      }
+    });
+
+    // Form submit
+    joinForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const user = auth.currentUser;
+      const classCode = classCodeInput.value.trim();
+
+      if (!user) return alert("You must be logged in.");
+      if (!classCode) return alert("Please enter a class code.");
+
+      try {
+        // Check if class exists
+        const classRef = doc(db, "classes", classCode);
+        const classSnap = await getDoc(classRef);
+        if (!classSnap.exists()) {
+          alert(" Class not found.");
+          return;
+        }
+
+        const classData = classSnap.data();
+
+        // Add to user's joinedClasses
+        await addDoc(collection(db, "users", user.uid, "joinedClasses"), {
+          name: classData.name || "Unnamed Class",
+          subject: classData.subject || "",
+          section: classData.section || "",
+          code: classCode,
+          joinedAt: new Date(),
+        });
+
+        // Add student info
+        let studentName = user.displayName || "";
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists() && userDocSnap.data().name) {
+          studentName = userDocSnap.data().name;
+        }
+
+        // This logic ensures the student's email and name are saved inside the class
+const studentRef = doc(db, "classes", classCode, "students", user.uid);
+await setDoc(studentRef, {
+  name: studentName || "Unnamed Student",
+  email: user.email || "",
+  joinedAt: new Date()
+}, { merge: true });
+
+        // Accent colors
+        const accent1 = getComputedStyle(document.documentElement)
+          .getPropertyValue("--accent1")
+          ?.trim() || "#a3563d";
+        const accent2 = getComputedStyle(document.documentElement)
+          .getPropertyValue("--accent2")
+          ?.trim() || "#d08c65";
+
+        //  SweetAlert with clean modern design
+        Swal.fire({
+          title: `<div style="font-weight:700;font-size:22px;">Joined this class?</div>`,
+          html: `
+            <div style="margin-bottom:15px;">
+              <i class="fa-solid fa-circle-check" style="font-size:70px;color:${accent1};animation:pop 0.4s ease;"></i>
+            </div>
+            <p style="font-size:15px;color:#2b2b2b;margin-top:8px;">
+              Welcome to <b>${classData.name}</b>! You now have access to all tasks and schedules. 
+            </p>
+            <style>
+              @keyframes pop {
+                0% { transform: scale(0.3); opacity: 0; }
+                80% { transform: scale(1.2); opacity: 1; }
+                100% { transform: scale(1); }
+              }
+            </style>
+          `,
+          background: "rgba(255,255,255,0.05)",
+          color: "#fff",
+          width: "400px",
+          backdrop: "rgba(0,0,0,0.45) blur(10px)",
+          showConfirmButton: true,
+          confirmButtonText: "OK",
+          confirmButtonColor: accent1,
+          customClass: {
+            popup: "rounded-3xl shadow-2xl",
+          },
+          allowOutsideClick: false,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              html: `
+                <div style="
+                  background: linear-gradient(90deg, ${accent1}, ${accent2});
+                  padding: 14px 20px;
+                  border-radius: 12px;
+                  color: white;
+                  font-weight:600;
+                  font-size:16px;
+                  text-align:center;
+                  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                ">
+                   You have joined <b>${classData.name}</b>!
+                </div>
+              `,
+              showConfirmButton: false,
+              timer: 1800,
+              background: "transparent",
+              backdrop: "rgba(0,0,0,0.15)",
+              width: "fit-content",
+              didClose: () => {
+                window.location.href = `class-view.html?code=${classCode}`;
+              },
+            });
+          }
+        });
+      } catch (err) {
+        console.error(" Join error:", err);
+        alert(" Failed to join class: " + err.message);
+      }
+    });
+  });
+</script>
+
+
+</body>
+</html>

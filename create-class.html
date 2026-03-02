@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Create Class | iSkedMathay</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+ <script src="theme.js" defer></script>
+ <style>
+  :root {
+    --main-bg: #f7f3ef;
+    --sidebar-bg: #f2e9df;
+    --text-color: #000;
+    --accent1: #ff5f6d;
+    --accent2: #d82cff;
+    --card-bg: #fff;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: var(--main-bg);
+    color: var(--text-color);
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row;
+  }
+
+  .sidebar {
+    width: 100px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+
+  .sidebar a {
+    color: var(--accent2);
+    text-decoration: none;
+    font-weight: 600;
+    margin: 18px 0;
+    text-align: center;
+    transition: 0.3s;
+  }
+
+  .sidebar a:hover {
+    transform: scale(1.1);
+    text-shadow: 0 0 8px var(--accent1), 0 0 15px var(--accent2);
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+  }
+
+  form {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  input {
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid #e8e2dd;
+    font-family: inherit;
+    width: 100%;
+  }
+
+  button {
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent2);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /*  MOBILE RESPONSIVE LAYOUT */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      flex-direction: row;
+      justify-content: space-around;
+      padding: 0;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+
+    .sidebar img {
+      display: none;
+    }
+
+    .main {
+      flex: 1;
+      width: 100%;
+      padding: 20px;
+      margin-bottom: 65px; /* para di matakpan ng sidebar */
+    }
+
+    form {
+      width: 100%;
+      max-width: 100%;
+      margin: auto;
+    }
+  }
+  
+</style>
+
+</head>
+<body>
+  <div class="sidebar">
+    <img src="67eb2372-bf44-433b-bd1e-320f92ae8387.jpg" alt="Logo" style="width:65px;height:65px;border-radius:50%;background:#fff;padding:5px;margin-bottom:20px">
+    <a href="index.html"><i class="fas fa-home"></i><br>Home</a>
+    <a href="calendar.html"><i class="fas fa-calendar-alt"></i><br>Calendar</a>
+    <a href="settings.html"><i class="fas fa-cog"></i><br>Settings</a>
+  </div>
+
+  <div class="main">
+    <h2 style="background:linear-gradient(to right,var(--accent1),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:28px;margin-bottom:18px">Create a New Class</h2>
+
+    <form id="createForm">
+      <label>Class Name</label>
+      <input id="className" required placeholder="e.g. Math 10 - A">
+
+      <label>Subject</label>
+      <input id="subject" required placeholder="e.g. Mathematics">
+
+      <label>Section</label>
+      <input id="section" required placeholder="e.g. A">
+
+      <button id="createBtn" type="submit">Create Class</button>
+    </form>
+  </div>
+
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const form = document.getElementById("createForm");
+  const btn = document.getElementById("createBtn");
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (btn.disabled) return;
+      btn.disabled = true;
+      btn.textContent = "Creating...";
+
+      const name = document.getElementById("className").value.trim();
+      const subject = document.getElementById("subject").value.trim();
+      const section = document.getElementById("section").value.trim();
+
+      if (!name || !subject || !section) {
+        alert("Please fill in all fields.");
+        btn.disabled = false;
+        btn.textContent = "Create Class";
+        return;
+      }
+
+      try {
+        // generate unique class code
+        const code = "CL" + Math.abs(Math.floor(Date.now() / 1000)).toString().slice(-6);
+
+        // save global class document
+        await setDoc(doc(db, "classes", code), {
+          name,
+          subject,
+          section,
+          code,
+          createdBy: user.uid,
+          createdAt: new Date()
+        });
+
+        // save under user's personal collection
+        const userClassRef = doc(collection(db, "users", user.uid, "classes"));
+        await setDoc(userClassRef, {
+          name, subject, section, code, createdAt: new Date()
+        });
+
+        console.log(` Class "${name}" created successfully with code ${code}`);
+
+        document.body.style.opacity = "0.7"; // optional fade effect
+        setTimeout(() => {
+          window.location.href = `class-view.html?code=${encodeURIComponent(code)}`;
+        }, 500);
+
+      } catch (err) { 
+        console.error("Create error:", err);
+        alert("Failed to create class. Try again.");
+        btn.disabled = false;
+        btn.textContent = "Create Class";
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

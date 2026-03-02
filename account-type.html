@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Account Type | iSkedMathay</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #ffffff, #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: #fef9f4;
+      padding: 40px;
+      border-radius: 25px;
+      width: 480px;
+      text-align: center;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.15);
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 30px;
+      font-weight: 700;
+      background: linear-gradient(to right, #ff6a00, #a000ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+
+    p {
+      color: #444;
+      font-weight: 500;
+      margin: 15px 0 25px;
+    }
+
+    .roles {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+    }
+
+    .role {
+      width: 170px;
+      height: 170px;
+      border: 3px solid #9c27b0;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.3s;
+      color: #f25a3b;
+      background: #fff;
+    }
+
+    .role:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      border-color: #f25a3b;
+    }
+
+    .role.selected {
+      border-color: #f25a3b;
+      background: #fef3f0;
+    }
+
+    .role i {
+      font-size: 60px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: none;
+      outline: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(to right, #f86d48, #8b00ff);
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>iSkedMathay</h1>
+    <p>Using iSkedMathay as a...</p>
+
+    <div class="roles">
+      <div class="role" id="teacher">
+        <i class="fa-solid fa-chalkboard-user"></i>
+        <span>Teacher</span>
+      </div>
+      <div class="role" id="student">
+        <i class="fa-solid fa-user-graduate"></i>
+        <span>Student</span>
+      </div>
+    </div>
+
+    <button id="continueBtn" disabled>Continue</button>
+  </div>
+
+  <script src="https://kit.fontawesome.com/a2d9d6bd90.js" crossorigin="anonymous"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let selectedRole = null;
+    const continueBtn = document.getElementById("continueBtn");
+
+    //  Role selection handler
+    document.querySelectorAll(".role").forEach(role => {
+      role.addEventListener("click", () => {
+        document.querySelectorAll(".role").forEach(r => r.classList.remove("selected"));
+        role.classList.add("selected");
+        selectedRole = role.id;
+        continueBtn.disabled = false;
+      });
+    });
+
+    //  Continue button handler
+    continueBtn.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          role: selectedRole,
+          createdAt: new Date(),
+        }, { merge: true });
+
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error("Error saving role:", err);
+        alert("Something went wrong. Please try again.");
+      }
+    });
+
+    //  If user already has role, skip this page
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists() && docSnap.data().role) {
+        // already has a role → go directly to home
+        window.location.href = "index.html";
+      }
+    });
+  </script>
+</body>
+</html>

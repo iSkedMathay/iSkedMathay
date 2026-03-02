@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account | iSkedMathay</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* ✅ IMAGE + GRADIENT BACKGROUND */
+      background:
+        linear-gradient(
+          rgba(255, 120, 150, 0.6),
+          rgba(255, 180, 100, 0.6)
+        ),
+        url("IMSHS.png"); /* 🔁 palitan image */
+      background-size: cover;
+      background-position: center;
+
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .container {
+      background: white;
+      padding: 40px 50px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #000000;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 2px solid #e0d6cf;
+      outline: none;
+      font-family: inherit;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #d82cff;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(to right, #ff5f6d, #d82cff);
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.85;
+      transform: scale(1.02);
+    }
+
+    a {
+      display: block;
+      margin-top: 18px;
+      color: #000000;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.style.opacity = "1";
+    });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Create Account</h2>
+
+    <input type="email" id="email" placeholder="Enter your email" required>
+    <input type="password" id="password" placeholder="Create a password" required>
+
+    <button id="signupBtn">Sign Up</button>
+    <a href="login.html">Already have an account? Log in</a>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { firebaseConfig } from "./firebase-config.js";
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  document.getElementById("signupBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing fields",
+        text: "Please fill out both email and password.",
+        confirmButtonColor: "#ff5f6d",
+        backdrop: "rgba(0,0,0,0.3) blur(8px)"
+      });
+      return;
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+
+      Swal.fire({
+        icon: "success",
+        title: "Account Created!",
+        text: "Welcome to iSkedMathay!",
+        confirmButtonColor: "#ff5f6d",
+        backdrop: "rgba(0,0,0,0.35) blur(10px)"
+      }).then(() => {
+        window.location.href = "login.html";
+      });
+
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Signup Failed",
+        text: error.message,
+        confirmButtonColor: "#ff5f6d",
+        backdrop: "rgba(0,0,0,0.3) blur(8px)"
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
