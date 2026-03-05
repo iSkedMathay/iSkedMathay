@@ -316,7 +316,7 @@ async function openTaskPanel(key, displayDate, data = null) {
           snap.forEach(doc => {
             const data = doc.data();
             const email = data.email || "Unknown Student";
-            const time = data.time || (data.finishedAt ? new Date(data.finishedAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "---");
+            const time = data.time || (data.finishedAt ? new Date(data.finishedAt.seconds * 1000).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : "---");
 
             tableHTML += `
               <tr style="border-bottom: 1px solid #eee; font-size: 13px;">
@@ -375,7 +375,7 @@ async function openTaskPanel(key, displayDate, data = null) {
               uid: currentUser.uid,
               email: currentUser.email,
               finishedAt: new Date(),
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Sine-save na ang oras
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit',hour12:true }) // Sine-save na ang oras
             });
             currentDoneBtn.innerText = "Completed ✓";
             currentDoneBtn.style.background = "#4CAF50";
