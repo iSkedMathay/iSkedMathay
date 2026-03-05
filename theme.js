@@ -1,6 +1,6 @@
 // theme.js
 
-export function applyTheme(theme) {
+function applyTheme(theme) {
   const themes = {
     default: {
       "--main-bg": "#f7f3ef",
@@ -90,4 +90,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
