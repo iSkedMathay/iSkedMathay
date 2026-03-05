@@ -5,108 +5,52 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Select Account Type | iSkedMathay</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
-      margin: 0;
-      height: 100vh;
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #ffffff, #ffffff);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      margin: 0; height: 100vh; font-family: "Poppins", sans-serif;
+      background: #ffffff; display: flex; justify-content: center; align-items: center;
     }
-
     .container {
-      background: #fef9f4;
-      padding: 40px;
-      border-radius: 25px;
-      width: 480px;
-      text-align: center;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.15);
-      animation: fadeIn 0.5s ease;
+      background: #fef9f4; padding: 40px; border-radius: 25px; width: 480px;
+      text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,0.15);
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     h1 {
-      font-size: 30px;
-      font-weight: 700;
+      font-size: 30px; font-weight: 700;
       background: linear-gradient(to right, #ff6a00, #a000ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin: 0;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
-    p {
-      color: #444;
-      font-weight: 500;
-      margin: 15px 0 25px;
-    }
-
-    .roles {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 30px;
-    }
-
+    .roles { display: flex; justify-content: space-around; margin: 30px 0; }
+    
+    /* DITO ANG FIX SA UI */
     .role {
-      width: 170px;
-      height: 170px;
-      border: 3px solid #9c27b0;
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: 0.3s;
-      color: #f25a3b;
-      background: #fff;
+      width: 170px; height: 170px; border: 3px solid #ddd; /* Default border */
+      border-radius: 16px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; cursor: pointer;
+      transition: 0.3s; color: #444; background: #fff;
     }
-
-    .role:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      border-color: #f25a3b;
-    }
-
+    /* Kapag na-click, ito ang magbabago */
     .role.selected {
-      border-color: #f25a3b;
-      background: #fef3f0;
+      border-color: #f25a3b !important;
+      background: #fef3f0 !important;
+      color: #f25a3b !important;
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(242, 90, 59, 0.2);
     }
-
-    .role i {
-      font-size: 60px;
-      margin-bottom: 10px;
-    }
+    .role i { font-size: 50px; margin-bottom: 10px; pointer-events: none; }
+    .role span { font-weight: 600; pointer-events: none; }
 
     button {
-      border: none;
-      outline: none;
-      padding: 12px 25px;
-      border-radius: 10px;
-      font-weight: 600;
-      color: #fff;
+      border: none; padding: 12px 30px; border-radius: 10px;
+      font-weight: 600; color: #fff; font-size: 16px;
       background: linear-gradient(to right, #f86d48, #8b00ff);
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s;
+      cursor: pointer; transition: 0.3s; width: 100%;
     }
-
-    button:hover {
-      transform: scale(1.05);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    button:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
   </style>
 </head>
 <body>
+
   <div class="container">
     <h1>iSkedMathay</h1>
     <p>Using iSkedMathay as a...</p>
@@ -125,8 +69,6 @@
     <button id="continueBtn" disabled>Continue</button>
   </div>
 
-  <script src="https://kit.fontawesome.com/a2d9d6bd90.js" crossorigin="anonymous"></script>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -140,18 +82,28 @@
     let selectedRole = null;
     const continueBtn = document.getElementById("continueBtn");
 
-    //  Role selection handler
-    document.querySelectorAll(".role").forEach(role => {
+    // FIX: Mas siguradong click listener
+    const roles = document.querySelectorAll(".role");
+    roles.forEach(role => {
       role.addEventListener("click", () => {
-        document.querySelectorAll(".role").forEach(r => r.classList.remove("selected"));
+        console.log("Clicked:", role.id);
+        
+        // 1. Alisin ang 'selected' sa lahat
+        roles.forEach(r => r.classList.remove("selected"));
+        
+        // 2. Idagdag ang 'selected' sa pinindot
         role.classList.add("selected");
+        
+        // 3. I-update ang variable at button
         selectedRole = role.id;
         continueBtn.disabled = false;
       });
     });
 
-    //  Continue button handler
+    // Continue button logic
     continueBtn.addEventListener("click", async () => {
+      if (!selectedRole) return;
+      
       const user = auth.currentUser;
       if (!user) {
         window.location.href = "login.html";
@@ -159,32 +111,33 @@
       }
 
       try {
+        continueBtn.innerText = "Saving...";
+        continueBtn.disabled = true;
+
         await setDoc(doc(db, "users", user.uid), {
           email: user.email,
-          role: selectedRole,
-          createdAt: new Date(),
+          role: selectedRole.toLowerCase(),
+          createdAt: new Date()
         }, { merge: true });
 
         window.location.href = "index.html";
       } catch (err) {
-        console.error("Error saving role:", err);
-        alert("Something went wrong. Please try again.");
+        console.error("Error:", err);
+        alert("Failed to save. Check your internet connection.");
+        continueBtn.innerText = "Continue";
+        continueBtn.disabled = false;
       }
     });
 
-    //  If user already has role, skip this page
+    // Check auth state but DONT auto-redirect unless may role na talaga
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = "login.html";
-        return;
-      }
-
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists() && docSnap.data().role) {
-        // already has a role → go directly to home
-        window.location.href = "index.html";
+      } else {
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists() && docSnap.data().role) {
+          window.location.href = "index.html";
+        }
       }
     });
   </script>
