@@ -232,86 +232,112 @@ async function openTaskPanel(key, displayDate, data = null) {
   // 2. I-check kung ang kasalukuyang user ay ang Teacher
   const isTeacher = currentUser && currentUser.email === classOwnerEmail;
 
+  // --- START NG DEADLINE LOGIC ---
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0); // I-reset ang oras para date comparison lang
+
+  const [y, m, d] = key.split('-').map(Number);
+  const taskDate = new Date(y, m - 1, d); 
+  const isPastDeadline = taskDate < todayDate; // True kung kahapon o mas maaga pa
+  // --- END NG DEADLINE LOGIC ---
+
   if (data && Array.isArray(data) && data.length > 0) {
     data.forEach(task => {
       const taskDiv = document.createElement("div");
       taskDiv.className = "task-item-card";
       taskDiv.style = "background:#f9f9f9; padding:12px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--accent1); cursor:pointer;";
       
+      // LOGIC PARA SA BUTTON O DEADLINE MESSAGE
+      let actionButtonHtml = "";
+      if (!isTeacher) {
+        if (isPastDeadline) {
+          // Mensahe kapag tapos na ang deadline
+          actionButtonHtml = `
+            <div style="padding:10px; background:#ffebee; color:#c62828; border-radius:6px; font-size:12px; text-align:center; font-weight:600; border:1px solid #ffcdd2;">
+              <i class="fas fa-clock"></i> Deadline passed. Marking disabled.
+            </div>
+          `;
+        } else {
+          // Normal na button kung hindi pa deadline
+          actionButtonHtml = `
+            <button class="mark-done-btn" data-id="${task.id}" style="padding:8px; border-radius:6px; border:none; background:var(--accent2); color:white; cursor:pointer; font-weight:600;">
+              Mark as Finished
+            </button>
+          `;
+        }
+      }
+
       taskDiv.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <strong style="color:var(--accent1); font-size:15px;">${task.title}</strong>
           <i class="fas fa-chevron-down" style="font-size:12px; color:#ccc;"></i>
         </div>
         <div class="task-details" style="display:none; margin-top:10px; font-size:14px; color:#555; border-top:1px solid #eee; padding-top:10px;">
-          ${task.description || "No description provided."}
+          <p style="margin-bottom:12px;">${task.description || "No description provided."}</p>
           
-          <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px;">
-            ${!isTeacher ? `
-              <button class="mark-done-btn" data-id="${task.id}" style="padding:8px; border-radius:6px; border:none; background:var(--accent2); color:white; cursor:pointer;">
-                Mark as Finished
-              </button>
-            ` : ''}
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            ${actionButtonHtml}
             
-            <a href="#" class="view-finished-link" data-id="${task.id}" style="font-size:12px; color:var(--accent1); text-decoration:underline;">
+            <a href="#" class="view-finished-link" data-id="${task.id}" style="font-size:12px; color:var(--accent1); text-decoration:underline; text-align:center; margin-top:5px;">
               View students who finished this
             </a>
           </div>
-          <div style="font-size:10px; color:#aaa; margin-top:8px;">By: ${task.createdByEmail || 'Unknown'}</div>
+          <div style="font-size:10px; color:#aaa; margin-top:12px; text-align:right;">By: ${task.createdByEmail || 'Unknown'}</div>
         </div>
       `;
+
+      // --- EXISTING FUNCTIONS (Wala akong inalis dito) ---
+
       async function showFinishedStudents(taskId) {
-  studentModal.classList.add("active");
-  const studentListContainer = document.getElementById("studentList"); 
-  studentListContainer.innerHTML = "<li>Loading...</li>";
+        studentModal.classList.add("active");
+        const studentListContainer = document.getElementById("studentList"); 
+        studentListContainer.innerHTML = "<li>Loading...</li>";
 
-  try {
-    const finishedRef = collection(db, "classes", classCode, "tasks", taskId, "finished");
-    const snap = await getDocs(finishedRef);
+        try {
+          const finishedRef = collection(db, "classes", classCode, "tasks", taskId, "finished");
+          const snap = await getDocs(finishedRef);
 
-    if (snap.empty) {
-      studentListContainer.innerHTML = "<li style='list-style:none; padding:20px;'>No students finished yet.</li>";
-      return;
-    }
+          if (snap.empty) {
+            studentListContainer.innerHTML = "<li style='list-style:none; padding:20px;'>No students finished yet.</li>";
+            return;
+          }
 
-    let tableHTML = `
-      <table style="width:100%; border-collapse: collapse; margin-top:10px; text-align: left;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--accent2); color: var(--accent2); font-size: 14px;">
-            <th style="padding: 10px;">Student Email</th>
-            <th style="padding: 10px; text-align: right;">Time Finished</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
+          let tableHTML = `
+            <table style="width:100%; border-collapse: collapse; margin-top:10px; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--accent2); color: var(--accent2); font-size: 14px;">
+                  <th style="padding: 10px;">Student Email</th>
+                  <th style="padding: 10px; text-align: right;">Time Finished</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
 
-    snap.forEach(doc => {
-      const data = doc.data();
-      const email = data.email || "Unknown Student";
-      // Kunin ang time, kung wala pang 'time' field, gagamitin ang 'finishedAt' timestamp
-      const time = data.time || (data.finishedAt ? new Date(data.finishedAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "---");
+          snap.forEach(doc => {
+            const data = doc.data();
+            const email = data.email || "Unknown Student";
+            const time = data.time || (data.finishedAt ? new Date(data.finishedAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "---");
 
-      tableHTML += `
-        <tr style="border-bottom: 1px solid #eee; font-size: 13px;">
-          <td style="padding: 10px; display: flex; align-items: center; gap: 8px;">
-            <i class="fas fa-check-circle" style="color: green;"></i>
-            <span>${email}</span>
-          </td>
-          <td style="padding: 10px; text-align: right; color: #666; font-weight: 600;">
-            ${time}
-          </td>
-        </tr>
-      `;
-    });
+            tableHTML += `
+              <tr style="border-bottom: 1px solid #eee; font-size: 13px;">
+                <td style="padding: 10px; display: flex; align-items: center; gap: 8px;">
+                  <i class="fas fa-check-circle" style="color: green;"></i>
+                  <span>${email}</span>
+                </td>
+                <td style="padding: 10px; text-align: right; color: #666; font-weight: 600;">
+                  ${time}
+                </td>
+              </tr>
+            `;
+          });
 
-    tableHTML += `</tbody></table>`;
-    studentListContainer.innerHTML = tableHTML;
-
-  } catch (e) {
-    console.error("Error loading finished students:", e);
-    studentListContainer.innerHTML = "<li>Error loading list.</li>";
-  }
-}
+          tableHTML += `</tbody></table>`;
+          studentListContainer.innerHTML = tableHTML;
+        } catch (e) {
+          console.error("Error loading finished students:", e);
+          studentListContainer.innerHTML = "<li>Error loading list.</li>";
+        }
+      }
 
       // Accordion Toggle
       taskDiv.addEventListener("click", (e) => {
@@ -323,9 +349,10 @@ async function openTaskPanel(key, displayDate, data = null) {
         icon.className = isHidden ? "fas fa-chevron-up" : "fas fa-chevron-down";
       });
 
-      // Mark as Finished Logic (IF NOT TEACHER)
-      if (!isTeacher) {
+      // Mark as Finished Logic (Only if not teacher and NOT past deadline)
+      if (!isTeacher && !isPastDeadline) {
         const currentDoneBtn = taskDiv.querySelector(".mark-done-btn");
+        
         const checkStatus = async () => {
           if (!currentUser) return;
           const finishedRef = doc(db, "classes", classCode, "tasks", task.id, "finished", currentUser.uid);
@@ -333,7 +360,7 @@ async function openTaskPanel(key, displayDate, data = null) {
           if (snap.exists()) {
             currentDoneBtn.disabled = true;
             currentDoneBtn.innerText = "Completed ✓";
-            currentDoneBtn.style.background = "#ccc";
+            currentDoneBtn.style.background = "#4CAF50"; // Green for completion
             currentDoneBtn.style.cursor = "default";
           }
         };
@@ -347,10 +374,11 @@ async function openTaskPanel(key, displayDate, data = null) {
             await setDoc(finishedDocRef, {
               uid: currentUser.uid,
               email: currentUser.email,
-              finishedAt: new Date()
+              finishedAt: new Date(),
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Sine-save na ang oras
             });
             currentDoneBtn.innerText = "Completed ✓";
-            currentDoneBtn.style.background = "#ccc";
+            currentDoneBtn.style.background = "#4CAF50";
           } catch (err) {
             console.error(err);
             currentDoneBtn.disabled = false;
