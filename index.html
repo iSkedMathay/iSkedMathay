@@ -227,6 +227,9 @@ body {
   }
 }
 
+#createLink {
+  display: none; }
+
   </style>
 
 
@@ -257,7 +260,7 @@ body {
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { firebaseConfig } from "./firebase-config.js";
 
@@ -268,79 +271,84 @@ body {
     const classList = document.getElementById("classList");
     const logoutBtn = document.getElementById("logoutBtn");
 
+    // Logout Logic
     logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      setTimeout(() => {
-  window.location.href = "login.html";
-}, 150);
-
+        await signOut(auth);
+        window.location.href = "login.html";
     });
 
+    // ISANG onAuthStateChanged LANG DAPAT
     onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setTimeout(() => {
-  window.location.href = "login.html";
-}, 150);
-
-        return;
-      }
-
-      try {
-        classList.innerHTML = "<p>Loading your classes...</p>";
-
-        // Fetch created classes
-        const createdSnap = await getDocs(collection(db, "users", user.uid, "classes"));
-        // Fetch joined classes
-        const joinedSnap = await getDocs(collection(db, "users", user.uid, "joinedClasses"));
-
-        const all = [];
-
-        createdSnap.forEach(d => { const data = d.data(); all.push({ ...data, type: "Created" }); });
-        joinedSnap.forEach(d => { const data = d.data(); all.push({ ...data, type: "Joined" }); });
-
-        if (all.length === 0) {
-          classList.innerHTML = "<p>No classes yet. Create or join a class to get started!</p>";
-          return;
+        if (!user) {
+            window.location.href = "login.html";
+            return;
         }
 
-        classList.innerHTML = "";
-        all.forEach(cls => {
-          const card = document.createElement("div");
-          card.className = "class-card";
-          card.innerHTML = `
-            <div class="class-title">${escapeHtml(cls.name)}</div>
-            <div class="class-subject">${escapeHtml(cls.subject)} — ${escapeHtml(cls.section)}</div>
-            <div class="class-code">${cls.type} | Code: ${escapeHtml(cls.code)}</div>
-          `;
-          card.addEventListener("click", () => {
-            // navigate via URL param 
-           setTimeout(() => {
-  window.location.href = `class-view.html?code=${encodeURIComponent(cls.code)}`;
-}, 150);
+        try {
+            classList.innerHTML = "<p>Loading your classes...</p>";
 
-          });
-          classList.appendChild(card);
-        });
+            // 1. CHECK ROLE PARA SA BUTTONS
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
 
-      } catch (err) {
-        console.error("Load classes error:", err);
-        classList.innerHTML = "<p>Failed to load classes. Try refresh.</p>";
-      }
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                const userRole = userData.role;
+
+                const createBtn = document.getElementById("createLink");
+                const joinBtn = document.getElementById("joinLink");
+
+                if (userRole === "teacher") {
+                    createBtn.style.display = "inline-block";
+                    joinBtn.style.display = "inline-block";
+                } else {
+                    createBtn.style.display = "none";
+                    joinBtn.style.display = "inline-block";
+                }
+            } else {
+                // Kung walang role sa DB, papiliin muna
+                window.location.href = "account-type.html";
+                return;
+            }
+
+            // 2. LOAD CLASSES
+            const createdSnap = await getDocs(collection(db, "users", user.uid, "classes"));
+            const joinedSnap = await getDocs(collection(db, "users", user.uid, "joinedClasses"));
+
+            const all = [];
+            createdSnap.forEach(d => { all.push({ ...d.data(), type: "Created" }); });
+            joinedSnap.forEach(d => { all.push({ ...d.data(), type: "Joined" }); });
+
+            if (all.length === 0) {
+                classList.innerHTML = "<p>No classes yet. Join a class to get started!</p>";
+                return;
+            }
+
+            classList.innerHTML = "";
+            all.forEach(cls => {
+                const card = document.createElement("div");
+                card.className = "class-card";
+                card.innerHTML = `
+                    <div class="class-title">${escapeHtml(cls.name)}</div>
+                    <div class="class-subject">${escapeHtml(cls.subject)} — ${escapeHtml(cls.section)}</div>
+                    <div class="class-code">${cls.type} | Code: ${escapeHtml(cls.code)}</div>
+                `;
+                card.addEventListener("click", () => {
+                    window.location.href = `class-view.html?code=${encodeURIComponent(cls.code)}`;
+                });
+                classList.appendChild(card);
+            });
+
+        } catch (err) {
+            console.error("Error:", err);
+            classList.innerHTML = "<p>Failed to load classes. Try to refresh.</p>";
+        }
     });
 
-    // small utility to prevent XSS
-    function escapeHtml(str){ if(!str) return ""; return String(str).replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
- 
- function smoothRedirect(url) {
-  document.body.style.transition = none;
-  document.body.style.opacity = none;
-  setTimeout(() => {
-    window.location.href = url;
-  }, 300);
-}
-
- 
- </script>
-
+    function escapeHtml(str) { 
+        if (!str) return ""; 
+        return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s])); 
+    }
+</script>
 </body>
 </html>
